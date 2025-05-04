@@ -9,9 +9,9 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/igo-used/instagram-ai-agents/internal/agents"
-	"github.com/igo-used/instagram-ai-agents/internal/database"
-	"github.com/igo-used/instagram-ai-agents/internal/instagram"
+	"github.com/yourusername/instagram-ai-agents/internal/agents"
+	"github.com/yourusername/instagram-ai-agents/internal/database"
+	"github.com/yourusername/instagram-ai-agents/internal/instagram"
 )
 
 func main() {
@@ -20,15 +20,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
-	
+
 	err = db.Initialize()
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
-	
+
 	// Initialize Gin router
 	r := gin.Default()
-	
+
 	// Configure CORS
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -37,24 +37,24 @@ func main() {
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
-	
+
 	// Serve static files
 	r.Static("/static", "./web/static")
 	r.LoadHTMLGlob("web/templates/*")
-	
+
 	// Web UI routes
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"title": "Instagram AI Agents",
 		})
 	})
-	
+
 	r.GET("/dashboard", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "dashboard.html", gin.H{
 			"title": "Dashboard | Instagram AI Agents",
 		})
 	})
-	
+
 	// API routes
 	api := r.Group("/api")
 	{
@@ -67,7 +67,7 @@ func main() {
 				})
 				return
 			}
-			
+
 			news, err := analyzer.FetchTechNews()
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -75,13 +75,13 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": news,
+				"data":   news,
 			})
 		})
-		
+
 		api.GET("/content-ideas", func(c *gin.Context) {
 			analyzer, err := agents.NewTechTrendAnalyzer()
 			if err != nil {
@@ -90,7 +90,7 @@ func main() {
 				})
 				return
 			}
-			
+
 			news, err := analyzer.FetchTechNews()
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -98,7 +98,7 @@ func main() {
 				})
 				return
 			}
-			
+
 			ideas, err := analyzer.GenerateContentIdeas(news)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -106,27 +106,27 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": ideas,
+				"data":   ideas,
 			})
 		})
-		
+
 		// Sarcasm Enhancer routes
 		api.POST("/enhance-content", func(c *gin.Context) {
 			var req struct {
 				Content      string `json:"content" binding:"required"`
 				SarcasmLevel int    `json:"sarcasmLevel" binding:"required,min=1,max=10"`
 			}
-			
+
 			if err := c.ShouldBindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"error": err.Error(),
 				})
 				return
 			}
-			
+
 			enhancer, err := agents.NewSarcasmEnhancer()
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -134,7 +134,7 @@ func main() {
 				})
 				return
 			}
-			
+
 			enhanced, err := enhancer.EnhanceContent(req.Content, req.SarcasmLevel)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -142,13 +142,13 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": enhanced,
+				"data":   enhanced,
 			})
 		})
-		
+
 		// Instagram routes
 		api.GET("/instagram/media", func(c *gin.Context) {
 			client, err := instagram.NewClient()
@@ -158,7 +158,7 @@ func main() {
 				})
 				return
 			}
-			
+
 			media, err := client.GetRecentMedia()
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -166,16 +166,16 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": media,
+				"data":   media,
 			})
 		})
-		
+
 		api.GET("/instagram/insights/:mediaId", func(c *gin.Context) {
 			mediaID := c.Param("mediaId")
-			
+
 			client, err := instagram.NewClient()
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -183,7 +183,7 @@ func main() {
 				})
 				return
 			}
-			
+
 			insights, err := client.GetMediaInsights(mediaID)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -191,13 +191,13 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": insights,
+				"data":   insights,
 			})
 		})
-		
+
 		// Database routes
 		api.GET("/content-ideas/db", func(c *gin.Context) {
 			ideas, err := db.GetContentIdeas()
@@ -207,23 +207,23 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": ideas,
+				"data":   ideas,
 			})
 		})
-		
+
 		api.POST("/content-ideas/db", func(c *gin.Context) {
 			var idea database.ContentIdea
-			
+
 			if err := c.ShouldBindJSON(&idea); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"error": err.Error(),
 				})
 				return
 			}
-			
+
 			err := db.SaveContentIdea(&idea)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -231,13 +231,13 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": idea,
+				"data":   idea,
 			})
 		})
-		
+
 		api.GET("/posts", func(c *gin.Context) {
 			posts, err := db.GetPosts()
 			if err != nil {
@@ -246,23 +246,23 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": posts,
+				"data":   posts,
 			})
 		})
-		
+
 		api.POST("/posts", func(c *gin.Context) {
 			var post database.Post
-			
+
 			if err := c.ShouldBindJSON(&post); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"error": err.Error(),
 				})
 				return
 			}
-			
+
 			err := db.SavePost(&post)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -270,13 +270,13 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": post,
+				"data":   post,
 			})
 		})
-		
+
 		api.GET("/analytics/:postId", func(c *gin.Context) {
 			postIDStr := c.Param("postId")
 			postID, err := strconv.Atoi(postIDStr)
@@ -286,7 +286,7 @@ func main() {
 				})
 				return
 			}
-			
+
 			analytics, err := db.GetAnalyticsForPost(postID)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -294,20 +294,20 @@ func main() {
 				})
 				return
 			}
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
-				"data": analytics,
+				"data":   analytics,
 			})
 		})
 	}
-	
+
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	
+
 	fmt.Printf("Server running on port %s\n", port)
 	log.Fatal(r.Run(":" + port))
 }
