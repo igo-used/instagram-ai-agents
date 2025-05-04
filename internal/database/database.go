@@ -25,27 +25,27 @@ func New() (*DB, error) {
 		user := os.Getenv("DB_USER")
 		password := os.Getenv("DB_PASSWORD")
 		dbname := os.Getenv("DB_NAME")
-		
+
 		if host == "" || port == "" || user == "" || dbname == "" {
 			return nil, fmt.Errorf("database connection parameters not set")
 		}
-		
+
 		connStr = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			host, port, user, password, dbname)
 	}
-	
+
 	// Connect to database
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Test the connection
 	err = db.Ping()
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &DB{db}, nil
 }
 
@@ -65,7 +65,7 @@ func (db *DB) Initialize() error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Create posts table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS posts (
@@ -83,7 +83,7 @@ func (db *DB) Initialize() error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Create analytics table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS analytics (
@@ -99,7 +99,7 @@ func (db *DB) Initialize() error {
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -116,11 +116,11 @@ type ContentIdea struct {
 // SaveContentIdea saves a content idea to the database
 func (db *DB) SaveContentIdea(idea *ContentIdea) error {
 	query := `
-		INSERT INTO content_ideas (headline, content, talking_points, hashtags)
-		VALUES (, , , )
-		RETURNING id, created_at
+    INSERT INTO content_ideas (headline, content, talking_points, hashtags)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id, created_at
 	`
-	
+
 	return db.QueryRow(
 		query,
 		idea.Headline,
@@ -137,13 +137,13 @@ func (db *DB) GetContentIdeas() ([]ContentIdea, error) {
 		FROM content_ideas
 		ORDER BY created_at DESC
 	`
-	
+
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var ideas []ContentIdea
 	for rows.Next() {
 		var idea ContentIdea
@@ -160,7 +160,7 @@ func (db *DB) GetContentIdeas() ([]ContentIdea, error) {
 		}
 		ideas = append(ideas, idea)
 	}
-	
+
 	return ideas, nil
 }
 
@@ -180,11 +180,11 @@ type Post struct {
 // SavePost saves a post to the database
 func (db *DB) SavePost(post *Post) error {
 	query := `
-		INSERT INTO posts (instagram_id, caption, media_url, permalink, status, scheduled_at, posted_at)
-		VALUES (, , , , , , )
-		RETURNING id, created_at
-	`
-	
+    INSERT INTO posts (instagram_id, caption, media_url, permalink, status, scheduled_at, posted_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING id, created_at
+`
+
 	return db.QueryRow(
 		query,
 		post.InstagramID,
@@ -204,13 +204,13 @@ func (db *DB) GetPosts() ([]Post, error) {
 		FROM posts
 		ORDER BY created_at DESC
 	`
-	
+
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var posts []Post
 	for rows.Next() {
 		var post Post
@@ -230,7 +230,7 @@ func (db *DB) GetPosts() ([]Post, error) {
 		}
 		posts = append(posts, post)
 	}
-	
+
 	return posts, nil
 }
 
@@ -248,11 +248,11 @@ type Analytics struct {
 // SaveAnalytics saves analytics data to the database
 func (db *DB) SaveAnalytics(analytics *Analytics) error {
 	query := `
-		INSERT INTO analytics (post_id, engagement, impressions, reach, saved)
-		VALUES (, , , , )
-		RETURNING id, recorded_at
-	`
-	
+    INSERT INTO analytics (post_id, engagement, impressions, reach, saved)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING id, recorded_at
+`
+
 	return db.QueryRow(
 		query,
 		analytics.PostID,
@@ -266,18 +266,18 @@ func (db *DB) SaveAnalytics(analytics *Analytics) error {
 // GetAnalyticsForPost gets all analytics data for a post
 func (db *DB) GetAnalyticsForPost(postID int) ([]Analytics, error) {
 	query := `
-		SELECT id, post_id, engagement, impressions, reach, saved, recorded_at
-		FROM analytics
-		WHERE post_id = 
-		ORDER BY recorded_at DESC
-	`
-	
+    SELECT id, post_id, engagement, impressions, reach, saved, recorded_at
+    FROM analytics
+    WHERE post_id = $1
+    ORDER BY recorded_at DESC
+`
+
 	rows, err := db.Query(query, postID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var analyticsData []Analytics
 	for rows.Next() {
 		var data Analytics
@@ -295,6 +295,80 @@ func (db *DB) GetAnalyticsForPost(postID int) ([]Analytics, error) {
 		}
 		analyticsData = append(analyticsData, data)
 	}
-	
+
 	return analyticsData, nil
+}
+
+// Add these methods to database.go
+
+// SaveSpeculation saves a speculation to the database
+func (db *DB) SaveSpeculation(company, topic, headline, content string) error {
+	query := `
+        INSERT INTO speculations (company, topic, headline, content, created_at)
+        VALUES ($1, $2, $3, $4, NOW())
+    `
+	_, err := db.Exec(query, company, topic, headline, content)
+	return err
+}
+
+// GetRecentSpeculations gets the most recent speculations
+func (db *DB) GetRecentSpeculations(limit int) ([]map[string]interface{}, error) {
+	query := `
+        SELECT id, company, topic, headline, created_at
+        FROM speculations
+        ORDER BY created_at DESC
+        LIMIT $1
+    `
+
+	rows, err := db.Query(query, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var company, topic, headline string
+		var createdAt time.Time
+
+		if err := rows.Scan(&id, &company, &topic, &headline, &createdAt); err != nil {
+			return nil, err
+		}
+
+		results = append(results, map[string]interface{}{
+			"id":        id,
+			"company":   company,
+			"topic":     topic,
+			"headline":  headline,
+			"createdAt": createdAt.Format(time.RFC3339),
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// InitSchema initializes the database schema
+func (db *DB) InitSchema() error {
+	// Add speculations table to your existing Initialize method
+	_, err := db.Exec(`
+        CREATE TABLE IF NOT EXISTS speculations (
+            id SERIAL PRIMARY KEY,
+            company VARCHAR(255) NOT NULL,
+            topic VARCHAR(255) NOT NULL,
+            headline TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )
+    `)
+	if err != nil {
+		return err
+	}
+
+	// Call your existing Initialize method
+	return db.Initialize()
 }

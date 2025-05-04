@@ -378,6 +378,19 @@ func main() {
 				"data":   analytics,
 			})
 		})
+
+		// Initialize database
+		db, err := database.New()
+		if err != nil {
+			log.Fatalf("Failed to connect to database: %v", err)
+		}
+		defer db.Close()
+
+		// Initialize schema
+		err = db.InitSchema()
+		if err != nil {
+			log.Fatalf("Failed to initialize database schema: %v", err)
+		}
 	}
 
 	// Start server
