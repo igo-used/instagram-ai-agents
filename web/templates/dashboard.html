@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-lg">
+            <div class="container mx-auto px-4 py-6">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-3xl font-bold">Dashboard</h1>
+                    <a href="/" class="text-white hover:underline">Home</a>
+                </div>
+            </div>
+        </header>
+        
+        <main class="container mx-auto px-4 py-8 flex-grow">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Sidebar -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h2 class="text-2xl font-bold mb-4">Agents</h2>
+                        <nav>
+                            <ul class="space-y-2">
+                                <li>
+                                    <button id="tech-trends-btn" class="w-full text-left px-4 py-2 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        Tech Trend Analyzer
+                                    </button>
+                                </li>
+                                <li>
+                                    <button id="sarcasm-btn" class="w-full text-left px-4 py-2 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        Sarcasm Enhancer
+                                    </button>
+                                </li>
+                                <li>
+                                    <button id="instagram-btn" class="w-full text-left px-4 py-2 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        Instagram Integration
+                                    </button>
+                                </li>
+                                <li>
+                                    <button id="analytics-btn" class="w-full text-left px-4 py-2 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        Analytics
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-bold mb-4">Recent Posts</h2>
+                        <div id="recent-posts" class="space-y-4">
+                            <p class="text-gray-500">Loading recent posts...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main Content -->
+                <div class="lg:col-span-2">
+                    <!-- Tech Trend Analyzer Section -->
+                    <div id="tech-trends-section" class="bg-white rounded-lg shadow-md p-6 mb-8">
+                        <h2 class="text-2xl font-bold mb-4">Tech Trend Analyzer</h2>
+                        <button id="fetch-trends-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mb-4">
+                            Fetch Latest Tech Trends
+                        </button>
+                        <div id="trends-result" class="mt-4 hidden">
+                            <h3 class="text-xl font-semibold mb-2">Latest Tech News</h3>
+                            <div id="news-list" class="space-y-2 mb-4"></div>
+                            
+                            <button id="generate-ideas-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mb-4">
+                                Generate Content Ideas
+                            </button>
+                            
+                            <div id="ideas-result" class="mt-4 hidden">
+                                <h3 class="text-xl font-semibold mb-2">Generated Content Ideas</h3>
+                                <div id="ideas-content" class="p-4 bg-gray-50 rounded-lg"></div>
+                                
+                                <button id="save-ideas-btn" class="mt-4 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">
+                                    Save Ideas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sarcasm Enhancer Section -->
+                    <div id="sarcasm-section" class="bg-white rounded-lg shadow-md p-6 mb-8 hidden">
+                        <h2 class="text-2xl font-bold mb-4">Sarcasm Enhancer</h2>
+                        <div class="mb-4">
+                            <label for="content-input" class="block text-sm font-medium text-gray-700 mb-1">Content to Enhance</label>
+                            <textarea id="content-input" rows="5" class="w-full p-2 border rounded-md" placeholder="Paste your tech commentary here..."></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="sarcasm-level" class="block text-sm font-medium text-gray-700 mb-1">Sarcasm Level (1-10)</label>
+                            <input type="range" id="sarcasm-level" min="1" max="10" value="5" class="w-full">
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>Subtle</span>
+                                <span>Moderate</span>
+                                <span>Extreme</span>
+                            </div>
+                        </div>
+                        
+                        <button id="enhance-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mb-4">
+                            Enhance Content
+                        </button>
+                        
+                        <div id="enhanced-result" class="mt-4 hidden">
+                            <h3 class="text-xl font-semibold mb-2">Enhanced Content</h3>
+                            <div id="enhanced-content" class="p-4 bg-gray-50 rounded-lg"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Instagram Integration Section -->
+                    <div id="instagram-section" class="bg-white rounded-lg shadow-md p-6 mb-8 hidden">
+                        <h2 class="text-2xl font-bold mb-4">Instagram Integration</h2>
+                        <button id="fetch-media-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mb-4">
+                            Fetch Recent Media
+                        </button>
+                        
+                        <div id="media-result" class="mt-4 hidden">
+                            <h3 class="text-xl font-semibold mb-2">Recent Media</h3>
+                            <div id="media-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analytics Section -->
+                    <div id="analytics-section" class="bg-white rounded-lg shadow-md p-6 mb-8 hidden">
+                        <h2 class="text-2xl font-bold mb-4">Analytics</h2>
+                        <div class="mb-4">
+                            <canvas id="engagement-chart"></canvas>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-2">Top Performing Content</h3>
+                                <ul id="top-content" class="space-y-2">
+                                    <li class="text-gray-500">No data available</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-2">Growth Metrics</h3>
+                                <ul id="growth-metrics" class="space-y-2">
+                                    <li class="text-gray-500">No data available</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="bg-gray-800 text-white py-4">
+            <div class="container mx-auto px-4 text-center">
+                <p>&copy; 2023 Instagram AI Agents</p>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // Navigation
+        document.getElementById('tech-trends-btn').addEventListener('click', () => {
+            hideAllSections();
+            document.getElementById('tech-trends-section').classList.remove('hidden');
+        });
+        
+        document.getElementById('sarcasm-btn').addEventListener('click', () => {
+            hideAllSections();
+            document.getElementById('sarcasm-section').classList.remove('hidden');
+        });
+        
+        document.getElementById('instagram-btn').addEventListener('click', () => {
+            hideAllSections();
+            document.getElementById('instagram-section').classList.remove('hidden');
+        });
+        
+        document.getElementById('analytics-btn').addEventListener('click', () => {
+            hideAllSections();
+            document.getElementById('analytics-section').classList.remove('hidden');
+            initAnalyticsChart();
+        });
+        
+        function hideAllSections() {
+            document.getElementById('tech-trends-section').classList.add('hidden');
+            document.getElementById('sarcasm-section').classList.add('hidden');
+            document.getElementById('instagram-section').classList.add('hidden');
+            document.getElementById('analytics-section').classList.add('hidden');
+        }
+        
+        // Tech Trend Analyzer
+        document.getElementById('fetch-trends-btn').addEventListener('click', async () => {
+            const trendsResult = document.getElementById('trends-result');
+            const newsList = document.getElementById('news-list');
+            
+            trendsResult.classList.remove('hidden');
+            newsList.innerHTML = '<p class="text-gray-500">Loading news...</p>';
+            
+            try {
+                const response = await fetch('/api/tech-trends');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    newsList.innerHTML = '';
+                    
+                    data.data.forEach(article => {
+                        const articleEl = document.createElement('div');
+                        articleEl.className = 'p-2 border-b';
+                        articleEl.innerHTML = `<strong>${article.title}</strong>`;
+                        newsList.appendChild(articleEl);
+                    });
+                } else {
+                    newsList.innerHTML = '<p class="text-red-500">Error fetching news</p>';
+                }
+            } catch (error) {
+                newsList.innerHTML = '<p class="text-red-500">Error fetching news</p>';
+                console.error(error);
+            }
+        });
+        
+        document.getElementById('generate-ideas-btn').addEventListener('click', async () => {
+            const ideasResult = document.getElementById('ideas-result');
+            const ideasContent = document.getElementById('ideas-content');
+            
+            ideasResult.classList.remove('hidden');
+            ideasContent.innerHTML = '<p class="text-gray-500">Generating ideas...</p>';
+            
+            try {
+                const response = await fetch('/api/content-ideas');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    ideasContent.innerHTML = `<pre class="whitespace-pre-wrap">${data.data}</pre>`;
+                } else {
+                    ideasContent.innerHTML = '<p class="text-red-500">Error generating ideas</p>';
+                }
+            } catch (error) {
+                ideasContent.innerHTML = '<p class="text-red-500">Error generating ideas</p>';
+                console.error(error);
+            }
+        });
+        
+        // Sarcasm Enhancer
+        document.getElementById('enhance-btn').addEventListener('click', async () => {
+            const content = document.getElementById('content-input').value;
+            const sarcasmLevel = document.getElementById('sarcasm-level').value;
+            const enhancedResult = document.getElementById('enhanced-result');
+            const enhancedContent = document.getElementById('enhanced-content');
+            
+            if (!content) {
+                alert('Please enter some content to enhance');
+                return;
+            }
+            
+            enhancedResult.classList.remove('hidden');
+            enhancedContent.innerHTML = '<p class="text-gray-500">Enhancing content...</p>';
+            
+            try {
+                const response = await fetch('/api/enhance-content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content,
+                        sarcasmLevel: parseInt(sarcasmLevel),
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    enhancedContent.innerHTML = `<pre class="whitespace-pre-wrap">${data.data}</pre>`;
+                } else {
+                    enhancedContent.innerHTML = '<p class="text-red-500">Error enhancing content</p>';
+                }
+            } catch (error) {
+                enhancedContent.innerHTML = '<p class="text-red-500">Error enhancing content</p>';
+                console.error(error);
+            }
+        });
+        
+        // Instagram Integration
+        document.getElementById('fetch-media-btn').addEventListener('click', async () => {
+            const mediaResult = document.getElementById('media-result');
+            const mediaList = document.getElementById('media-list');
+            
+            mediaResult.classList.remove('hidden');
+            mediaList.innerHTML = '<p class="text-gray-500">Loading media...</p>';
+            
+            try {
+                const response = await fetch('/api/instagram/media');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    mediaList.innerHTML = '';
+                    
+                    if (data.data.length === 0) {
+                        mediaList.innerHTML = '<p class="text-gray-500">No media found</p>';
+                        return;
+                    }
+                    
+                    data.data.forEach(media => {
+                        const mediaEl = document.createElement('div');
+                        mediaEl.className = 'bg-gray-50 p-4 rounded-lg';
+                        
+                        let mediaContent = '';
+                        if (media.media_url) {
+                            mediaContent = `<img src="${media.media_url}" alt="Instagram media" class="w-full h-48 object-cover rounded mb-2">`;
+                        }
+                        
+                        mediaEl.innerHTML = `
+                            ${mediaContent}
+                            <p class="text-sm">${media.caption || 'No caption'}</p>
+                            <div class="mt-2 flex justify-between text-xs text-gray-500">
+                                <span>${new Date(media.timestamp).toLocaleDateString()}</span>
+                                <a href="${media.permalink}" target="_blank" class="text-blue-500 hover:underline">View on Instagram</a>
+                            </div>
+                        `;
+                        
+                        mediaList.appendChild(mediaEl);
+                    });
+                } else {
+                    mediaList.innerHTML = '<p class="text-red-500">Error fetching media</p>';
+                }
+            } catch (error) {
+                mediaList.innerHTML = '<p class="text-red-500">Error fetching media</p>';
+                console.error(error);
+            }
+        });
+        
+        // Analytics
+        function initAnalyticsChart() {
+            const ctx = document.getElementById('engagement-chart').getContext('2d');
+            
+            // Sample data - in a real app, this would come from your API
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [
+                        {
+                            label: 'Engagement',
+                            data: [120, 190, 300, 250, 420, 380],
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Followers',
+                            data: [1000, 1200, 1400, 1800, 2200, 2600],
+                            borderColor: 'rgb(153, 102, 255)',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Account Growth'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load recent posts
+        async function loadRecentPosts() {
+            const recentPosts = document.getElementById('recent-posts');
+            
+            try {
+                const response = await fetch('/api/posts');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    recentPosts.innerHTML = '';
+                    
+                    if (data.data.length === 0) {
+                        recentPosts.innerHTML = '<p class="text-gray-500">No posts found</p>';
+                        return;
+                    }
+                    
+                    data.data.slice(0, 5).forEach(post => {
+                        const postEl = document.createElement('div');
+                        postEl.className = 'border-b pb-2';
+                        postEl.innerHTML = `
+                            <p class="font-medium">${post.caption.substring(0, 50)}${post.caption.length > 50 ? '...' : ''}</p>
+                            <p class="text-xs text-gray-500">${new Date(post.created_at).toLocaleDateString()}</p>
+                        `;
+                        recentPosts.appendChild(postEl);
+                    });
+                } else {
+                    recentPosts.innerHTML = '<p class="text-gray-500">Error loading posts</p>';
+                }
+            } catch (error) {
+                recentPosts.innerHTML = '<p class="text-gray-500">Error loading posts</p>';
+                console.error(error);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRecentPosts();
+        });
+    </script>
+</body>
+</html>

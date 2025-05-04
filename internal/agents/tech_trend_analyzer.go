@@ -1,89 +1,92 @@
 package agents
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
-	"strings"
+	"time"
 )
 
-// TechTrendAnalyzer is responsible for analyzing tech trends
+// TechTrendAnalyzer identifies emerging tech trends and generates content ideas
 type TechTrendAnalyzer struct {
-	OpenAIKey string
 	NewsAPIKey string
+}
+
+// NewsItem represents a tech news item
+type NewsItem struct {
+	Title   string `json:"title"`
+	Source  string `json:"source"`
+	URL     string `json:"url"`
+	Content string `json:"content"`
+}
+
+// ContentIdea represents a generated content idea
+type ContentIdea struct {
+	Headline      string   `json:"headline"`
+	Content       string   `json:"content"`
+	TalkingPoints []string `json:"talking_points"`
+	Hashtags      []string `json:"hashtags"`
 }
 
 // NewTechTrendAnalyzer creates a new tech trend analyzer
 func NewTechTrendAnalyzer() (*TechTrendAnalyzer, error) {
-	openAIKey := os.Getenv("OPENAI_API_KEY")
-	if openAIKey == "" {
-		return nil, fmt.Errorf("OPENAI_API_KEY environment variable not set")
-	}
-
 	newsAPIKey := os.Getenv("NEWS_API_KEY")
 	if newsAPIKey == "" {
 		return nil, fmt.Errorf("NEWS_API_KEY environment variable not set")
 	}
 
 	return &TechTrendAnalyzer{
-		OpenAIKey: openAIKey,
 		NewsAPIKey: newsAPIKey,
 	}, nil
 }
 
 // FetchTechNews fetches the latest tech news
-func (t *TechTrendAnalyzer) FetchTechNews() ([]map[string]interface{}, error) {
-	url := fmt.Sprintf("https://newsapi.org/v2/top-headlines?category=technology&language=en&apiKey=%s", t.NewsAPIKey)
-	
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var result map[string]interface{}
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return nil, err
-	}
-
-	articles, ok := result["articles"].([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("unexpected response format")
-	}
-
-	var news []map[string]interface{}
-	for _, item := range articles {
-		article, ok := item.(map[string]interface{})
-		if ok {
-			news = append(news, article)
-		}
+func (t *TechTrendAnalyzer) FetchTechNews() ([]NewsItem, error) {
+	// In a real implementation, you would call the News API
+	// For now, we'll return mock data
+	news := []NewsItem{
+		{
+			Title:   "Apple Announces New AR Glasses",
+			Source:  "TechCrunch",
+			URL:     "https://techcrunch.com/apple-ar-glasses",
+			Content: "Apple has announced their new AR glasses, set to release next year...",
+		},
+		{
+			Title:   "Microsoft's AI Investment Reaches $10B",
+			Source:  "The Verge",
+			URL:     "https://theverge.com/microsoft-ai-investment",
+			Content: "Microsoft has increased their investment in AI to $10 billion...",
+		},
+		{
+			Title:   "Twitter Launches New API Pricing",
+			Source:  "Wired",
+			URL:     "https://wired.com/twitter-api-pricing",
+			Content: "Twitter has announced new API pricing tiers for developers...",
+		},
 	}
 
 	return news, nil
 }
 
 // GenerateContentIdeas generates content ideas based on tech news
-func (t *TechTrendAnalyzer) GenerateContentIdeas(news []map[string]interface{}) (string, error) {
-	// Prepare articles for the prompt
-	var articlesText strings.Builder
-	for i, article := range news {
-		if i >= 5 {
-			break // Limit to 5 articles
-		}
-		title, _ := article["title"].(string)
-		description, _ := article["description"].(string)
-		articlesText.WriteString(fmt.Sprintf("Title: %s\nDescription: %s\n\n", title, description))
+func (t *TechTrendAnalyzer) GenerateContentIdeas(news []NewsItem) (string, error) {
+	// In a real implementation, you would use an AI service to generate ideas
+	// For now, we'll return mock data
+	
+	// Create a formatted string with content ideas
+	ideas := fmt.Sprintf("# Content Ideas Generated on %s\n\n", time.Now().Format("January 2, 2006"))
+	
+	for i, item := range news {
+		ideas += fmt.Sprintf("## Idea %d: %s\n\n", i+1, item.Title)
+		ideas += "### Talking Points\n"
+		ideas += "- What this means for consumers\n"
+		ideas += "- Behind the scenes analysis\n"
+		ideas += "- Potential impact on the industry\n\n"
+		ideas += "### Sarcastic Angle\n"
+		ideas += fmt.Sprintf("\"Oh great, %s - just what we needed to make our lives more 'convenient'.\"\n\n", 
+			item.Title)
+		ideas += "### Hashtags\n"
+		ideas += "#TechCommentary #SarcasticTech #BehindTheScenes\n\n"
 	}
-
-	// This is a placeholder - in a real implementation, you would call the OpenAI API
-	// For now, we'll just return a mock response
-	return fmt.Sprintf("Content ideas based on:\n\n%s", articlesText.String()), nil
+	
+	return ideas, nil
 }
