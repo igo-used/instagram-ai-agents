@@ -46,6 +46,11 @@
                                         Analytics
                                     </button>
                                 </li>
+                                <li>
+                                    <button id="speculator-btn" class="w-full text-left px-4 py-2 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        Behind the Scenes Speculator
+                                    </button>
+                                </li>
                             </ul>
                         </nav>
                     </div>
@@ -149,13 +154,46 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Behind the Scenes Speculator Section -->
+                    <div id="speculator-section" class="bg-white rounded-lg shadow-md p-6 mb-8 hidden">
+                        <h2 class="text-2xl font-bold mb-4">Behind the Scenes Speculator</h2>
+                        
+                        <div class="mb-4">
+                            <label for="company-select" class="block text-sm font-medium text-gray-700 mb-1">Select Company</label>
+                            <select id="company-select" class="w-full p-2 border rounded-md">
+                                <option value="">-- Select a company --</option>
+                            </select>
+                        </div>
+                        
+                        <div id="topics-container" class="mb-4 hidden">
+                            <label for="topic-select" class="block text-sm font-medium text-gray-700 mb-1">Select Topic</label>
+                            <select id="topic-select" class="w-full p-2 border rounded-md">
+                                <option value="">-- Select a topic --</option>
+                            </select>
+                        </div>
+                        
+                        <button id="speculate-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mb-4 hidden">
+                            Generate Speculation
+                        </button>
+                        
+                        <div id="speculation-result" class="mt-4 hidden">
+                            <h3 id="speculation-headline" class="text-xl font-semibold mb-2"></h3>
+                            <div id="speculation-content" class="p-4 bg-gray-50 rounded-lg"></div>
+                            <div id="speculation-disclaimer" class="mt-2 p-2 bg-yellow-50 text-yellow-800 text-sm rounded-lg"></div>
+                            <div class="mt-2">
+                                <h4 class="font-medium">Sources:</h4>
+                                <ul id="speculation-sources" class="list-disc pl-5 text-sm"></ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
         
         <footer class="bg-gray-800 text-white py-4">
             <div class="container mx-auto px-4 text-center">
-                <p>&copy; 2023 Instagram AI Agents</p>
+                <p>&copy; 2025 Instagram AI Agents</p>
             </div>
         </footer>
     </div>
@@ -183,11 +221,18 @@
             initAnalyticsChart();
         });
         
+        document.getElementById('speculator-btn').addEventListener('click', () => {
+            hideAllSections();
+            document.getElementById('speculator-section').classList.remove('hidden');
+            loadCompanies();
+        });
+        
         function hideAllSections() {
             document.getElementById('tech-trends-section').classList.add('hidden');
             document.getElementById('sarcasm-section').classList.add('hidden');
             document.getElementById('instagram-section').classList.add('hidden');
             document.getElementById('analytics-section').classList.add('hidden');
+            document.getElementById('speculator-section').classList.add('hidden');
         }
         
         // Tech Trend Analyzer
@@ -400,6 +445,139 @@
                 console.error(error);
             }
         }
+        
+        // Behind the Scenes Speculator
+        async function loadCompanies() {
+            const companySelect = document.getElementById('company-select');
+            
+            try {
+                const response = await fetch('/api/companies');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    companySelect.innerHTML = '<option value="">-- Select a company --</option>';
+                    
+                    data.data.forEach(company => {
+                        const option = document.createElement('option');
+                        option.value = company;
+                        option.textContent = company;
+                        companySelect.appendChild(option);
+                    });
+                } else {
+                    alert('Error loading companies');
+                }
+            } catch (error) {
+                alert('Error loading companies');
+                console.error(error);
+            }
+        }
+
+        document.getElementById('company-select').addEventListener('change', async (e) => {
+            const company = e.target.value;
+            const topicsContainer = document.getElementById('topics-container');
+            const topicSelect = document.getElementById('topic-select');
+            const speculateBtn = document.getElementById('speculate-btn');
+            
+            if (!company) {
+                topicsContainer.classList.add('hidden');
+                speculateBtn.classList.add('hidden');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/topics/${company}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    topicSelect.innerHTML = '<option value="">-- Select a topic --</option>';
+                    
+                    data.data.forEach(topic => {
+                        const option = document.createElement('option');
+                        option.value = topic;
+                        option.textContent = topic;
+                        topicSelect.appendChild(option);
+                    });
+                    
+                    topicsContainer.classList.remove('hidden');
+                } else {
+                    alert('Error loading topics');
+                }
+            } catch (error) {
+                alert('Error loading topics');
+                console.error(error);
+            }
+        });
+
+        document.getElementById('topic-select').addEventListener('change', (e) => {
+            const topic = e.target.value;
+            const speculateBtn = document.getElementById('speculate-btn');
+            
+            if (topic) {
+                speculateBtn.classList.remove('hidden');
+            } else {
+                speculateBtn.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('speculate-btn').addEventListener('click', async () => {
+            const company = document.getElementById('company-select').value;
+            const topic = document.getElementById('topic-select').value;
+            const speculationResult = document.getElementById('speculation-result');
+            const speculationHeadline = document.getElementById('speculation-headline');
+            const speculationContent = document.getElementById('speculation-content');
+            const speculationDisclaimer = document.getElementById('speculation-disclaimer');
+            const speculationSources = document.getElementById('speculation-sources');
+            
+            if (!company || !topic) {
+                alert('Please select both a company and a topic');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/speculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        company,
+                        topic,
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    speculationHeadline.textContent = data.data.headline;
+                    
+                    // Convert markdown to HTML (simple version)
+                    const markdown = data.data.speculation;
+                    let html = markdown
+                        .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold my-2">$1</h1>')
+                        .replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold my-2">$1</h2>')
+                        .replace(/^### (.*$)/gm, '<h3 class="text-lg font-medium my-2">$1</h3>')
+                        .replace(/\n\n/g, '<br><br>')
+                        .replace(/\n([0-9]+\. .*)/g, '<br>$1');
+                    
+                    speculationContent.innerHTML = html;
+                    speculationDisclaimer.textContent = data.data.disclaimer;
+                    
+                    speculationSources.innerHTML = '';
+                    data.data.sources.forEach(source => {
+                        const li = document.createElement('li');
+                        li.textContent = source;
+                        speculationSources.appendChild(li);
+                    });
+                    
+                    speculationResult.classList.remove('hidden');
+                } else {
+                    alert('Error generating speculation');
+                }
+            } catch (error) {
+                alert('Error generating speculation');
+                console.error(error);
+            }
+        });
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {

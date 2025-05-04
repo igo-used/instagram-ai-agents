@@ -9,9 +9,9 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/yourusername/instagram-ai-agents/internal/agents"
-	"github.com/yourusername/instagram-ai-agents/internal/database"
-	"github.com/yourusername/instagram-ai-agents/internal/instagram"
+	"github.com/igo-used/instagram-ai-agents/internal/agents"
+	"github.com/igo-used/instagram-ai-agents/internal/database"
+	"github.com/igo-used/instagram-ai-agents/internal/instagram"
 )
 
 func main() {
@@ -146,6 +146,84 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{
 				"status": "success",
 				"data":   enhanced,
+			})
+		})
+
+		// Behind the Scenes Speculator routes
+		api.GET("/companies", func(c *gin.Context) {
+			speculator, err := agents.NewBehindScenesSpeculator()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			companies := speculator.ListAvailableCompanies()
+
+			c.JSON(http.StatusOK, gin.H{
+				"status": "success",
+				"data":   companies,
+			})
+		})
+
+		api.GET("/topics/:company", func(c *gin.Context) {
+			company := c.Param("company")
+
+			speculator, err := agents.NewBehindScenesSpeculator()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			topics, err := speculator.GenerateTopics(company)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"status": "success",
+				"data":   topics,
+			})
+		})
+
+		api.POST("/speculate", func(c *gin.Context) {
+			var req struct {
+				Company string `json:"company" binding:"required"`
+				Topic   string `json:"topic" binding:"required"`
+			}
+
+			if err := c.ShouldBindJSON(&req); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			speculator, err := agents.NewBehindScenesSpeculator()
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			result, err := speculator.GenerateSpeculation(req.Company, req.Topic)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"status": "success",
+				"data":   result,
 			})
 		})
 
